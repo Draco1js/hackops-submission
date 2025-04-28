@@ -42,10 +42,7 @@ jobs:
         run: pnpm --filter shared build
         
       - name: Type check
-        run: |
-          pnpm --filter shared exec tsc --noEmit
-          pnpm --filter server exec tsc --noEmit
-          pnpm --filter client exec tsc --noEmit
+        run: pnpm exec tsc --build packages/server/tsconfig.json packages/client/tsconfig.json
         
       - name: Lint
         run: pnpm --filter client lint
