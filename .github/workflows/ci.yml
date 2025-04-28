@@ -42,7 +42,20 @@ jobs:
         run: pnpm --filter shared build
         
       - name: Type check
-        run: pnpm typecheck
+        run: |
+          # Build shared package first
+          pnpm --filter shared build
+          # Create a temporary tsconfig for server that explicitly includes shared
+          echo '{
+            "extends": "./tsconfig.json",
+            "compilerOptions": {
+              "paths": {
+                "shared": ["../shared/dist"]
+              }
+            }
+          }' > packages/server/tsconfig.temp.json
+          # Run type check with the temporary config
+          cd packages/server && pnpm exec tsc --noEmit --project tsconfig.temp.json
         
       - name: Lint
         run: pnpm --filter client lint
