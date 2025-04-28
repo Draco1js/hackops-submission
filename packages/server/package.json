@@ -17,7 +17,7 @@
     "@opentelemetry/resources": "^1.19.0",
     "@opentelemetry/sdk-node": "^0.46.0",
     "@opentelemetry/sdk-trace-base": "^2.0.0",
-    "@opentelemetry/sdk-trace-node": "^1.19.0",
+    "@opentelemetry/sdk-trace-node": "^2.0.0",
     "@opentelemetry/semantic-conventions": "^1.19.0",
     "axios": "^1.9.0",
     "cors": "^2.8.5",
