@@ -1,15 +1,22 @@
-FROM node:23-alpine AS base
+FROM node:20-alpine AS base
+# Set environment variables to ensure non-interactive mode
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-# Add environment variables to prevent prompts, weeeirdass workaround
 ENV CI=true
-ENV ADBLOCK=true
-RUN corepack enable
+ENV NODE_ENV=production
+# Use a specific version of pnpm
+RUN npm install -g pnpm@8.15.4
 
 FROM base AS builder
 WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/client/package.json ./packages/client/
+COPY packages/server/package.json ./packages/server/
+COPY packages/shared/package.json ./packages/shared/
+# Install dependencies first (for better caching)
+RUN pnpm install --frozen-lockfile
+# Then copy the rest of the code
 COPY . .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
 RUN pnpm build
 
 FROM base AS client
@@ -23,7 +30,7 @@ FROM base AS server
 WORKDIR /app
 COPY --from=builder /app/packages/server/dist /app/server
 COPY --from=builder /app/packages/server/package.json /app/
-COPY --from=builder /app/pnpm-lock.yaml /app/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod
+COPY --from=builder /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/
+RUN pnpm install --prod --frozen-lockfile
 EXPOSE 3001
 CMD ["node", "/app/server/index.js"]
