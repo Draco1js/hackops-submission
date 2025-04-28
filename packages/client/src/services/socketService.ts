@@ -17,7 +17,7 @@ const socketService = {
   },
   isTodoValid: (id: string): boolean => {
     // Simple implementation to validate todo IDs
-    return id && typeof id === 'string' && id.length > 0;
+    return id !== undefined && typeof id === 'string' && id.length > 0;
   }
 };
 

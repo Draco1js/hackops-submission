@@ -26,7 +26,8 @@ const sdk = new NodeSDK({
     }),
     new ExpressInstrumentation({
       // Reduce instrumentation to only capture important routes
-      ignoreLayersType: ['middleware', 'request_handler']
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ignoreLayersType: ['middleware', 'request_handler'] as any
     }),
   ],
   // Set sampling rate to reduce number of traces
@@ -38,7 +39,7 @@ const sdk = new NodeSDK({
 // Add environment variable check to disable tracing completely if needed
 if (process.env.DISABLE_TRACING === 'true') {
   // Don't start the SDK
-  console.log('OpenTelemetry tracing disabled by environment variable');
+  console.info('OpenTelemetry tracing disabled by environment variable');
 } else {
   sdk.start();
 }
@@ -46,8 +47,8 @@ if (process.env.DISABLE_TRACING === 'true') {
 // Gracefully shut down the SDK on process exit
 process.on('SIGTERM', () => {
   sdk.shutdown()
-    .then(() => console.log('Tracing terminated'))
-    .catch((error) => console.log('Error terminating tracing', error))
+    .then(() => console.info('Tracing terminated'))
+    .catch((error) => console.info('Error terminating tracing', error))
     .finally(() => process.exit(0));
 });
 

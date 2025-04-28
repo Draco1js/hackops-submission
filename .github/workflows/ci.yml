@@ -39,7 +39,11 @@ jobs:
         run: pnpm install
         
       - name: Type check
-        run: pnpm -r exec tsc --noEmit
+        run: |
+          # Clean any previous build artifacts
+          rm -rf packages/client/node_modules/.tmp
+          # Run type check
+          pnpm -r exec tsc --noEmit
         
       - name: Lint
         run: pnpm --filter client lint

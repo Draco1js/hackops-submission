@@ -2,16 +2,29 @@
   "compilerOptions": {
     "types": ["jest", "node", "@testing-library/jest-dom"],
     "esModuleInterop": true,
-    "jsx": "react-jsx",
-    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "target": "ES2020",
+    "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "noEmit": true
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "shared": ["../shared/src"]
+    }
   },
   "include": ["src"],
   "references": [
     { "path": "./tsconfig.node.json" },
-    { "path": "./tsconfig.app.json" }
+    { "path": "../shared" }
   ]
 }
