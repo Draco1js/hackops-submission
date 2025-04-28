@@ -43,12 +43,20 @@ jobs:
         
       - name: Type check
         run: |
-          # Build shared package first
-          cd packages/shared && pnpm exec tsc
+          # Create a temporary tsconfig for server
+          echo '{
+            "extends": "./tsconfig.json",
+            "compilerOptions": {
+              "baseUrl": ".",
+              "paths": {
+                "shared/*": ["../../shared/src/*"]
+              }
+            }
+          }' > packages/server/tsconfig.temp.json
           
-          # Check server package with proper ESM imports
-          cd ../server && pnpm exec tsc --noEmit
-        
+          # Run type check with the temporary config
+          cd packages/server && pnpm exec tsc --noEmit --project tsconfig.temp.json
+          
       - name: Lint
         run: pnpm --filter client lint
         

@@ -1,13 +1,12 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "composite": true,
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "declaration": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "./dist",
-    "strict": true,
-    "esModuleInterop": true
+    "declaration": true,
+    "esModuleInterop": true,
+    "strict": true
   },
-  "include": ["src"]
+  "include": ["src/**/*"]
 }

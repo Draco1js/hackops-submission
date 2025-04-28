@@ -12,7 +12,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import { Todo, CreateTodoDto, UpdateTodoDto } from '../shared/src/index.js';
+import { Todo, CreateTodoDto, UpdateTodoDto } from '../../shared/src/index.js';
 
 const app: Express = express();
 const PORT = process.env.PORT || 3001;
