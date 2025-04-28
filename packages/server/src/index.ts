@@ -3,10 +3,19 @@ import './tracing';
 import express, { Express } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import { Todo, CreateTodoDto, UpdateTodoDto } from 'shared';
 
 const app: Express = express();
 const PORT = process.env.PORT || 3001;
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'PATCH', 'DELETE']
+  }
+});
 
 // Middleware
 app.use(cors());
@@ -15,6 +24,32 @@ app.use(express.json());
 
 // In-memory database
 const todos: Todo[] = [];
+let onlineUsers = 0;
+
+// Socket.IO events
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+  
+  // Increment online users count and broadcast
+  onlineUsers++;
+  io.emit('users:count', onlineUsers);
+  
+  // Send current todos to newly connected client
+  socket.emit('todos:init', todos);
+  
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+    
+    // Decrement online users count and broadcast
+    onlineUsers--;
+    io.emit('users:count', onlineUsers);
+  });
+});
+
+// Helper function to broadcast todo updates
+const broadcastTodos = () => {
+  io.emit('todos:update', todos);
+};
 
 // Routes
 app.get('/api/todos', (req, res) => {
@@ -36,6 +71,10 @@ app.post('/api/todos', (req, res) => {
   };
   
   todos.push(newTodo);
+  
+  // Broadcast the updated todos list
+  broadcastTodos();
+  
   res.status(201).json(newTodo);
 });
 
@@ -50,34 +89,42 @@ app.get('/api/todos/:id', (req, res) => {
 });
 
 app.patch('/api/todos/:id', (req, res) => {
-  const { text, completed } = req.body as UpdateTodoDto;
-  const todoIndex = todos.findIndex(t => t.id === req.params.id);
+  const { id } = req.params;
+  const updates = req.body as UpdateTodoDto;
+  
+  const todoIndex = todos.findIndex(t => t.id === id);
   
   if (todoIndex === -1) {
     return res.status(404).json({ error: 'Todo not found' });
   }
   
-  todos[todoIndex] = {
-    ...todos[todoIndex],
-    ...(text !== undefined && { text }),
-    ...(completed !== undefined && { completed })
-  };
+  todos[todoIndex] = { ...todos[todoIndex], ...updates };
+  
+  // Broadcast the updated todos list
+  broadcastTodos();
   
   res.json(todos[todoIndex]);
 });
 
 app.delete('/api/todos/:id', (req, res) => {
-  const todoIndex = todos.findIndex(t => t.id === req.params.id);
+  const { id } = req.params;
+  const todoIndex = todos.findIndex(t => t.id === id);
   
   if (todoIndex === -1) {
     return res.status(404).json({ error: 'Todo not found' });
   }
   
-  const [deletedTodo] = todos.splice(todoIndex, 1);
+  const deletedTodo = todos[todoIndex];
+  todos = todos.filter(t => t.id !== id);
+  
+  // Broadcast the updated todos list
+  broadcastTodos();
+  
   res.json(deletedTodo);
 });
 
 // Start server
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`WebSocket server running on ws://localhost:${PORT}`);
 });

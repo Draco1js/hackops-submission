@@ -2,6 +2,7 @@
   "name": "todo-app-monorepo",
   "private": true,
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
@@ -14,7 +15,13 @@
     "typescript": "~5.7.2",
     "husky": "^9.0.6",
     "lint-staged": "^15.2.0",
-    "@playwright/test": "^1.40.0"
+    "@playwright/test": "^1.40.0",
+    "eslint": "^9.22.0",
+    "@eslint/js": "^9.22.0",
+    "globals": "^16.0.0",
+    "typescript-eslint": "^8.26.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

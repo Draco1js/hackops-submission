@@ -3,15 +3,23 @@ import { Todo } from "../../shared/src";
 import TodoItem from "./components/TodoItem";
 import CircleProgress from "./components/CircleProgress";
 import { getTodos, createTodo, updateTodo, deleteTodo } from "./api/todoApi";
+import socketService from "./services/socketService";
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [onlineUsers, setOnlineUsers] = useState<number>(1);
 
-  // Fetch todos on component mount
+  // Calculate progress
+  const totalTodos = todos.length;
+  const completedTodos = todos.filter(todo => todo.completed).length;
+  const progressPercentage = totalTodos === 0 ? 0 : (completedTodos / totalTodos) * 100;
+
+  // Connect to WebSocket on component mount
   useEffect(() => {
+    // Initial fetch of todos
     const fetchTodos = async () => {
       try {
         setLoading(true);
@@ -27,14 +35,32 @@ function App() {
     };
 
     fetchTodos();
+    
+    // Connect to WebSocket
+    socketService.connect();
+    
+    // Listen for todo updates
+    const unsubscribe = socketService.on('todos:update', (updatedTodos: Todo[]) => {
+      setTodos(updatedTodos);
+    });
+    
+    // Listen for user count updates
+    socketService.on('users:count', (count: number) => {
+      setOnlineUsers(count);
+    });
+    
+    // Cleanup on unmount
+    return () => {
+      unsubscribe();
+      socketService.disconnect();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (input.trim()) {
       try {
-        const newTodo = await createTodo(input.trim());
-        setTodos((prev) => [...prev, newTodo]);
+        await createTodo(input.trim());
         setInput("");
       } catch (err) {
         setError("Failed to create todo. Please try again.");
@@ -48,8 +74,7 @@ function App() {
       const todoToUpdate = todos.find(todo => todo.id === id);
       if (!todoToUpdate) return;
       
-      const updatedTodo = await updateTodo(id, { completed: !todoToUpdate.completed });
-      setTodos(todos.map(todo => todo.id === id ? updatedTodo : todo));
+      await updateTodo(id, { completed: !todoToUpdate.completed });
     } catch (err) {
       setError("Failed to update todo. Please try again.");
       console.error(err);
@@ -59,24 +84,18 @@ function App() {
   const removeTodo = async (id: string) => {
     try {
       await deleteTodo(id);
-      setTodos(todos.filter(todo => todo.id !== id));
     } catch (err) {
       setError("Failed to delete todo. Please try again.");
       console.error(err);
     }
   };
 
-  // Calculate stats
-  const totalTodos = todos.length;
-  const completedTodos = todos.filter(todo => todo.completed).length;
-  const progressPercentage = totalTodos === 0 ? 0 : (completedTodos / totalTodos) * 100;
-
   return (
     <div className="min-h-screen bg-zinc-900 py-8">
       {/* Hero Section */}
       <div className="max-w-md mx-auto bg-zinc-800 rounded-xl shadow-lg overflow-hidden mb-6">
         <div className="p-6">
-          <h1 className="text2xl font-bold text-center text-white mb-6">The world's most complex todo app</h1>
+          <h1 className="text-2xl font-bold text-center text-white mb-6">The world's most complex todo app</h1>
           
           <div className="flex items-center justify-between">
             <div className="space-y-2">
@@ -91,6 +110,10 @@ function App() {
                     ? "All done! 🎉" 
                     : `${totalTodos - completedTodos} remaining`}
               </p>
+              <div className="text-xs text-zinc-500 mt-2">
+                <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                {onlineUsers} user{onlineUsers !== 1 ? 's' : ''} online
+              </div>
             </div>
             
             <CircleProgress percentage={progressPercentage} />
