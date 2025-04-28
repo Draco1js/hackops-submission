@@ -43,10 +43,9 @@ jobs:
         
       - name: Type check
         run: |
-          # First check shared package
           pnpm --filter shared exec tsc --noEmit
-          # Then check other packages that depend on shared
-          pnpm --filter "!shared" exec tsc --noEmit
+          pnpm --filter server exec tsc --noEmit
+          pnpm --filter client exec tsc --noEmit
         
       - name: Lint
         run: pnpm --filter client lint
