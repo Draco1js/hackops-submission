@@ -1,6 +1,8 @@
 FROM node:20-alpine AS base
 WORKDIR /app
 ENV NODE_ENV=production
+# Skip husky installation in Docker
+ENV HUSKY=0
 
 # Install pnpm
 RUN npm install -g pnpm@8.15.4
@@ -13,9 +15,9 @@ RUN pnpm config set network-timeout 300000 && \
     pnpm config set fetch-retries 5 && \
     pnpm config set fetch-retry-mintimeout 20000 && \
     pnpm config set fetch-retry-maxtimeout 120000 && \
-    pnpm install --no-frozen-lockfile --network-concurrency=1 || \
-    (sleep 5 && pnpm install --no-frozen-lockfile --network-concurrency=1) || \
-    (sleep 10 && pnpm install --no-frozen-lockfile --network-concurrency=1)
+    pnpm install --no-frozen-lockfile --network-concurrency=1 --ignore-scripts || \
+    (sleep 5 && pnpm install --no-frozen-lockfile --network-concurrency=1 --ignore-scripts) || \
+    (sleep 10 && pnpm install --no-frozen-lockfile --network-concurrency=1 --ignore-scripts)
 
 # Build the application
 RUN pnpm build
