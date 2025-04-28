@@ -1,3 +1,5 @@
+// Import tracing at the top of your entry file
+import './tracing';
 import express, { Express } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -12,7 +14,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 
 // In-memory database
-let todos: Todo[] = [];
+const todos: Todo[] = [];
 
 // Routes
 app.get('/api/todos', (req, res) => {
