@@ -42,7 +42,11 @@ jobs:
         run: pnpm --filter shared build
         
       - name: Type check
-        run: pnpm -r exec tsc --noEmit
+        run: |
+          # First check shared package
+          pnpm --filter shared exec tsc --noEmit
+          # Then check other packages that depend on shared
+          pnpm --filter "!shared" exec tsc --noEmit
         
       - name: Lint
         run: pnpm --filter client lint
