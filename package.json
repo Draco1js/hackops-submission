@@ -1,0 +1,13 @@
+{
+  "name": "todo-app-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "start": "pnpm --filter server start"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.2"
+  }
+}

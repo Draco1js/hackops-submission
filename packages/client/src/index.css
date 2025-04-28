@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* Apply dark mode colors by default */
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-zinc-900 text-white;
+}
