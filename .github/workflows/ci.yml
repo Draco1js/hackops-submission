@@ -42,7 +42,7 @@ jobs:
         run: pnpm --filter shared build
         
       - name: Type check
-        run: pnpm exec tsc --build packages/server/tsconfig.json packages/client/tsconfig.json
+        run: pnpm typecheck
         
       - name: Lint
         run: pnpm --filter client lint
