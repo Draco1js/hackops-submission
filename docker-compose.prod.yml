@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   client:
-    image: ghcr.io/your-username/your-repo/client:latest
+    image: ghcr.io/draco1js/hackops-submission/client:latest
     ports:
       - "3000:3000"
     environment:
@@ -11,7 +11,7 @@ services:
       - server
 
   server:
-    image: ghcr.io/your-username/your-repo/server:latest
+    image: ghcr.io/draco1js/hackops-submission/server:latest
     ports:
       - "3001:3001"
     environment:
