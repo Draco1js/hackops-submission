@@ -9,6 +9,7 @@ const SOCKET_URL = import.meta.env.PROD
 class SocketService {
   private socket: Socket | null = null;
   private listeners: Map<string, Set<(data: unknown) => void>> = new Map();
+  private validTodoIds: Set<string> = new Set();
 
   connect(): void {
     if (this.socket) return;
@@ -34,6 +35,13 @@ class SocketService {
 
     this.socket.on('users:count', (count: number) => {
       this.notifyListeners('users:count', count);
+    });
+
+    // Add a new event handler for todo IDs
+    this.socket.on('todos:ids', (todoIds: string[]) => {
+      // Store the valid todo IDs to avoid operations on deleted todos
+      this.validTodoIds = new Set(todoIds);
+      this.notifyListeners('todos:ids', todoIds);
     });
   }
 

@@ -5,7 +5,7 @@ const api = axios.create({
   baseURL: '/api'
 });
 
-export const getTodos = async (): Promise<Todo[]> => {
+export const getTodos = async (): Promise<Todo[] | { todos: Todo[], totalCount: number, page: number, limit: number, totalPages: number }> => {
   const response = await api.get('/todos');
   return response.data;
 };

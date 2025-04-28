@@ -24,7 +24,8 @@ function App() {
       try {
         setLoading(true);
         const data = await getTodos();
-        setTodos(data);
+        // Check if the response is an object with a todos property
+        setTodos(Array.isArray(data) ? data : (data.todos || []));
         setError(null);
       } catch (err) {
         setError("Failed to fetch todos. Please try again.");
