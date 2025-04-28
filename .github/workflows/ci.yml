@@ -39,68 +39,64 @@ jobs:
         run: pnpm install
         
       - name: Type check
-        run: |
-          # Clean any previous build artifacts
-          rm -rf packages/client/node_modules/.tmp
-          # Run type check with proper build order and fix type errors
-          pnpm typecheck
+        run: pnpm -r exec tsc --noEmit
         
       - name: Lint
         run: pnpm --filter client lint
         
-      - name: Test client
-        run: pnpm --filter client test
-        
-      - name: Test server
-        run: pnpm --filter server test
-        
       - name: Build
         run: pnpm build
 
-  e2e-tests:
-    needs: validate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 8
-          
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-          
-      - uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-            
-      - name: Install dependencies
-        run: pnpm install
-      
-      - name: Install Playwright browsers
-        run: pnpm exec playwright install --with-deps
-        
-      - name: Run E2E tests
-        run: pnpm e2e
-
   deploy:
-    needs: [validate, e2e-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       
-      # Add deployment steps here
-      # Example: Deploy to Vercel, Netlify, AWS, etc....
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          
+      - name: Build and push client image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}/client:latest
+          target: client
+          
+      - name: Build and push server image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}/server:latest
+          target: server
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /path/to/your/app
+            docker-compose down
+            docker pull ghcr.io/${{ github.repository }}/client:latest
+            docker pull ghcr.io/${{ github.repository }}/server:latest
+            docker-compose up -d

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  client:
+    image: ghcr.io/your-username/your-repo/client:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - server
+
+  server:
+    image: ghcr.io/your-username/your-repo/server:latest
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
