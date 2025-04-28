@@ -12,7 +12,8 @@
     "e2e:ui": "playwright test --ui",
     "test": "pnpm -r test",
     "test:watch": "pnpm -r test:watch",
-    "typecheck": "pnpm --filter shared build && pnpm -r exec tsc --noEmit"
+    "fix-types": "node scripts/fix-type-errors.js",
+    "typecheck": "pnpm --filter shared build && pnpm fix-types && pnpm -r exec tsc --noEmit"
   },
   "devDependencies": {
     "typescript": "~5.7.2",

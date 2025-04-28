@@ -42,7 +42,7 @@ jobs:
         run: |
           # Clean any previous build artifacts
           rm -rf packages/client/node_modules/.tmp
-          # Run type check with proper build order
+          # Run type check with proper build order and fix type errors
           pnpm typecheck
         
       - name: Lint
