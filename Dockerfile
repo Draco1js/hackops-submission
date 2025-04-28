@@ -21,6 +21,9 @@ RUN pnpm config set network-timeout 300000 && \
     pnpm config set fetch-retry-maxtimeout 120000 && \
     pnpm install --frozen-lockfile --ignore-scripts
 
+# Install TypeScript globally to ensure tsc is available
+RUN npm install -g typescript
+
 # Copy source code
 COPY . .
 
