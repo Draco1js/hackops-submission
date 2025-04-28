@@ -43,10 +43,10 @@ jobs:
         
       - name: Type check
         run: |
-          # Check shared package first
-          cd packages/shared && pnpm exec tsc --noEmit
+          # Build shared package first
+          cd packages/shared && pnpm exec tsc
           
-          # Check server package with relative imports
+          # Check server package with proper ESM imports
           cd ../server && pnpm exec tsc --noEmit
         
       - name: Lint
