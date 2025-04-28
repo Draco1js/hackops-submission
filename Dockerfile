@@ -13,8 +13,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/client/package.json ./packages/client/
 COPY packages/server/package.json ./packages/server/
 COPY packages/shared/package.json ./packages/shared/
-# Install dependencies first (for better caching)
-RUN pnpm install --frozen-lockfile
+# Install dependencies without frozen-lockfile flag
+RUN pnpm install
 # Then copy the rest of the code
 COPY . .
 RUN pnpm build
@@ -31,6 +31,7 @@ WORKDIR /app
 COPY --from=builder /app/packages/server/dist /app/server
 COPY --from=builder /app/packages/server/package.json /app/
 COPY --from=builder /app/pnpm-lock.yaml /app/pnpm-workspace.yaml /app/
-RUN pnpm install --prod --frozen-lockfile
+# Install production dependencies without frozen-lockfile flag
+RUN pnpm install --prod
 EXPOSE 3001
 CMD ["node", "/app/server/index.js"]
