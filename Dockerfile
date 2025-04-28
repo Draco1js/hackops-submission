@@ -6,7 +6,7 @@ RUN corepack enable
 FROM base AS builder
 WORKDIR /app
 COPY . .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-interaction
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install -y
 RUN pnpm build
 
 FROM base AS client
@@ -21,6 +21,6 @@ WORKDIR /app
 COPY --from=builder /app/packages/server/dist /app/server
 COPY --from=builder /app/packages/server/package.json /app/
 COPY --from=builder /app/pnpm-lock.yaml /app/
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --no-interaction
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod -y
 EXPOSE 3001
 CMD ["node", "/app/server/index.js"]
