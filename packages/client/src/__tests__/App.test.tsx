@@ -11,7 +11,8 @@ jest.mock('../api/todoApi');
 jest.mock('../services/socketService', () => ({
   connect: jest.fn(),
   disconnect: jest.fn(),
-  on: jest.fn((event: string, callback: (data: unknown) => void) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  on: jest.fn((event: string, callback: any) => {
     // Store the callback to trigger it in tests
     if (event === 'todos:update') {
       mockCallbacks.todosUpdate = callback as (todos: Todo[]) => void;
@@ -27,9 +28,10 @@ jest.mock('../services/socketService', () => ({
 
 // Store callbacks for testing
 interface MockCallbacks {
-  todosUpdate?: (todos: unknown) => void;
+  todosUpdate?: (todos: Todo[]) => void;
   usersCount?: (count: number) => void;
-  [key: string]: ((...args: unknown[]) => void) | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: ((...args: any[]) => void) | undefined;
 }
 
 const mockCallbacks: MockCallbacks = {};
@@ -105,7 +107,7 @@ describe('App Component', () => {
     
     // Submit the form - select by tag name instead of role
     const form = screen.getByText('Add').closest('form');
-    fireEvent.submit(form);
+    if (form) fireEvent.submit(form);
     
     // Check if createTodo was called with the right argument
     expect(mockCreateTodo).toHaveBeenCalledWith('New Todo');
