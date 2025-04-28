@@ -24,6 +24,9 @@ const io = new Server(httpServer, {
   }
 });
 
+// Add exports for testing
+export { app, httpServer, io };
+
 // Middleware
 app.use(cors());
 app.use(morgan('dev'));
@@ -37,7 +40,7 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 });
 
 // In-memory database
-const todos: Todo[] = [];
+let todos: Todo[] = [];
 let onlineUsers = 0;
 
 // Add mutex-like locking mechanism
@@ -221,10 +224,10 @@ const broadcastTodos = () => {
 // Add memory usage monitoring
 const logMemoryUsage = () => {
   const memoryUsage = process.memoryUsage();
-  console.log('Memory usage:');
-  console.log(`  RSS: ${Math.round(memoryUsage.rss / 1024 / 1024)} MB`);
-  console.log(`  Heap total: ${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`);
-  console.log(`  Heap used: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`);
+  console.info('Memory usage:');
+  console.info(`  RSS: ${Math.round(memoryUsage.rss / 1024 / 1024)} MB`);
+  console.info(`  Heap total: ${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`);
+  console.info(`  Heap used: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`);
 };
 
 // Log memory usage every 5 seconds during stress test
@@ -236,16 +239,20 @@ if (process.env.STRESS_TEST) {
 // Periodically clean up old todos if the list gets too large
 setInterval(() => {
   if (todos.length > 1000) {
-    console.log(`Cleaning up old todos. Before: ${todos.length}`);
+    console.info(`Cleaning up old todos. Before: ${todos.length}`);
     // Keep only the 500 most recent todos
     todos = todos.slice(-500);
-    console.log(`After cleanup: ${todos.length}`);
+    console.info(`After cleanup: ${todos.length}`);
     broadcastTodos();
   }
 }, 10000);
 
-// Start server
-httpServer.listen(PORT, () => {
-  console.info(`Server running on http://localhost:${PORT}`);
-  console.info(`WebSocket server running on ws://localhost:${PORT}`);
-});
+// Only start the server if this file is run directly, not when imported in tests
+if (process.env.NODE_ENV !== 'test') {
+  // Start server
+  httpServer.listen(PORT, () => {
+    console.info(`Server running on http://localhost:${PORT}`);
+    console.info(`WebSocket server running on ws://localhost:${PORT}`);
+  });
+}
+

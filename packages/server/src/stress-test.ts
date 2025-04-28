@@ -7,8 +7,8 @@ import fs from 'fs';
 
 const API_URL = 'http://localhost:3001/api';
 const SOCKET_URL = 'ws://localhost:3001';
-const NUM_USERS = 200; // Reduced from 100
-const OPERATIONS_PER_USER = 10; // Reduced from 20
+const NUM_USERS = 500; // Reduced from 100
+const OPERATIONS_PER_USER = 30; // Reduced from 20
 const DELAY_BETWEEN_OPS_MS = 100; // Increased from 200
 const LOG_FILE = 'stress-test-results.log';
 const BATCH_SIZE = 20;
@@ -19,7 +19,7 @@ const VERBOSE_LOGGING = false;
 // Add a conditional logging function
 function conditionalLog(message: string): void {
   if (VERBOSE_LOGGING) {
-    console.log(message);
+    console.info(message);
   }
 }
 
@@ -95,7 +95,7 @@ class User {
   async toggleRandomTodo(): Promise<void> {
     errorStats.totalOperations++;
     if (this.todos.length === 0) {
-      console.log(`User ${this.id} has no todos to toggle`);
+      console.info(`User ${this.id} has no todos to toggle`);
       errorStats.successfulOperations++;
       return;
     }
@@ -114,7 +114,7 @@ class User {
         await axios.patch(`${API_URL}/todos/${todo.id}`, {
           completed: !todo.completed
         });
-        console.log(`User ${this.id} toggled todo: ${todo.id}`);
+        console.info(`User ${this.id} toggled todo: ${todo.id}`);
         errorStats.successfulOperations++;
         errorStats.retrySuccesses += retryCount > 0 ? 1 : 0;
         return;
@@ -132,7 +132,7 @@ class User {
             // Todo not found - it was probably deleted by another user
             // Remove it from our local list and try a different todo if available
             this.todos = this.todos.filter(t => t.id !== todo.id);
-            console.log(`User ${this.id} tried to toggle non-existent todo: ${todo.id}`);
+            console.info(`User ${this.id} tried to toggle non-existent todo: ${todo.id}`);
             
             // Try to refresh todos list from server
             try {
@@ -176,7 +176,7 @@ class User {
   async deleteRandomTodo(): Promise<void> {
     errorStats.totalOperations++;
     if (this.todos.length === 0) {
-      console.log(`User ${this.id} has no todos to delete`);
+      console.info(`User ${this.id} has no todos to delete`);
       errorStats.successfulOperations++;
       return;
     }
@@ -192,7 +192,7 @@ class User {
     while (retryCount <= maxRetries) {
       try {
         await axios.delete(`${API_URL}/todos/${todo.id}`);
-        console.log(`User ${this.id} deleted todo: ${todo.id}`);
+        console.info(`User ${this.id} deleted todo: ${todo.id}`);
         errorStats.successfulOperations++;
         errorStats.retrySuccesses += retryCount > 0 ? 1 : 0;
         
@@ -213,7 +213,7 @@ class User {
             // Todo not found - it was probably deleted by another user
             // Remove it from our local list and consider this a success
             this.todos = this.todos.filter(t => t.id !== todo.id);
-            console.log(`User ${this.id} tried to delete already deleted todo: ${todo.id}`);
+            console.info(`User ${this.id} tried to delete already deleted todo: ${todo.id}`);
             errorStats.successfulOperations++;
             return;
           } else {
@@ -247,23 +247,23 @@ class User {
 
   disconnect(): void {
     this.socket.disconnect();
-    console.log(`User ${this.id} disconnected`);
+    console.info(`User ${this.id} disconnected`);
   }
 }
 
 function writeResultsToFile(results: string): void {
   fs.writeFileSync(LOG_FILE, results);
-  console.log(`Detailed results written to ${LOG_FILE}`);
+  console.info(`Detailed results written to ${LOG_FILE}`);
 }
 
 // Add graceful shutdown to clean up resources
+let users: User[] = []; // Declare users at the module level
+
 process.on('SIGINT', async () => {
-  console.log('Stress test interrupted, cleaning up...');
+  console.info('Stress test interrupted, cleaning up...');
   // Disconnect all users
-  if (typeof users !== 'undefined' && Array.isArray(users)) {
-    for (const user of users) {
-      user.disconnect();
-    }
+  for (const user of users) {
+    user.disconnect();
   }
   
   // Give time for disconnections to complete
@@ -274,16 +274,16 @@ process.on('SIGINT', async () => {
 // Add memory usage tracking to the stress test
 function logMemoryUsage(): void {
   const memoryUsage = process.memoryUsage();
-  console.log('Stress test memory usage:');
-  console.log(`  RSS: ${Math.round(memoryUsage.rss / 1024 / 1024)} MB`);
-  console.log(`  Heap total: ${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`);
-  console.log(`  Heap used: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`);
+  console.info('Stress test memory usage:');
+  console.info(`  RSS: ${Math.round(memoryUsage.rss / 1024 / 1024)} MB`);
+  console.info(`  Heap total: ${Math.round(memoryUsage.heapTotal / 1024 / 1024)} MB`);
+  console.info(`  Heap used: ${Math.round(memoryUsage.heapUsed / 1024 / 1024)} MB`);
 }
 
 async function runStressTest() {
-  console.log(`Starting stress test with ${NUM_USERS} users...`);
-  console.log(`Each user will perform ${OPERATIONS_PER_USER} operations`);
-  console.log(`Total operations: ${NUM_USERS * OPERATIONS_PER_USER}`);
+  console.info(`Starting stress test with ${NUM_USERS} users...`);
+  console.info(`Each user will perform ${OPERATIONS_PER_USER} operations`);
+  console.info(`Total operations: ${NUM_USERS * OPERATIONS_PER_USER}`);
   
   // Log initial memory usage
   logMemoryUsage();
@@ -291,7 +291,7 @@ async function runStressTest() {
   const startTime = Date.now();
   
   // Create users in batches to avoid overwhelming the server
-  const users = [];
+  users = []; // Reset the users array
   
   for (let i = 0; i < NUM_USERS; i += BATCH_SIZE) {
     const batchSize = Math.min(BATCH_SIZE, NUM_USERS - i);
@@ -300,17 +300,17 @@ async function runStressTest() {
     
     // Wait a bit between batches
     await new Promise(resolve => setTimeout(resolve, 500));
-    console.log(`Created users ${i + 1} to ${i + batch.length}`);
+    console.info(`Created users ${i + 1} to ${i + batch.length}`);
   }
   
   // Wait for connections to establish
-  console.log('Establishing connections...');
+  console.info('Establishing connections...');
   await new Promise(resolve => setTimeout(resolve, 3000));
   
   // Log memory after connections
   logMemoryUsage();
   
-  console.log('Running operations...');
+  console.info('Running operations...');
   // Run operations for each user with staggered starts
   const userPromises = users.map(async (user, index) => {
     // Stagger the start of operations for each user
@@ -354,13 +354,13 @@ ERROR BREAKDOWN:
 Operations per second: ${(errorStats.totalOperations / duration).toFixed(2)}
 `;
 
-  console.log(summary);
+  console.info(summary);
   writeResultsToFile(summary);
   
   // Final memory usage
   logMemoryUsage();
   
-  console.log('Stress test completed!');
+  console.info('Stress test completed!');
 }
 
 runStressTest().catch(error => {

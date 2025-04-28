@@ -72,6 +72,15 @@ function App() {
 
   const toggleTodo = async (id: string) => {
     try {
+      // Check if the todo ID is valid before attempting to update
+      if (!socketService.isTodoValid(id)) {
+        console.warn(`Attempted to toggle invalid todo ID: ${id}`);
+        // Refresh todos list to get the latest state
+        const data = await getTodos();
+        setTodos(Array.isArray(data) ? data : (data.todos || []));
+        return;
+      }
+
       const todoToUpdate = todos.find(todo => todo.id === id);
       if (!todoToUpdate) return;
       
