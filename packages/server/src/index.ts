@@ -5,8 +5,10 @@ if (process.env.STRESS_TEST === 'true') {
   process.env.OTEL_LOG_LEVEL = 'error';
 }
 
-// Import tracing after setting environment variables
-import './tracing';
+// Temporarily skip tracing imports to get the server running
+console.warn('Tracing module disabled temporarily');
+
+// Continue with regular imports
 import express, { Express } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';

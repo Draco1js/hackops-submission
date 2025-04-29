@@ -32,6 +32,6 @@ services:
           memory: 512M
     command: >
       sh -c "mkdir -p /app/server/server/src && 
-             ln -s /app/server/src/tracing.js /app/server/server/src/tracing.js || true && 
+             ln -s /app/server/tracing.js /app/server/server/src/tracing.js || true && 
              node /app/server/index.js"
     restart: unless-stopped
