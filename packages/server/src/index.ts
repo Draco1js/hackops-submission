@@ -200,6 +200,11 @@ app.delete('/api/todos/:id', async (req, res) => {
   }
 });
 
+   // Add a health check endpoint
+   app.get('/api/health', (_req, res) => {
+    res.status(200).json({ status: 'ok' });
+  });
+
 // Optimize broadcasting by limiting frequency and payload size
 let broadcastPending = false;
 const broadcastTodos = () => {
