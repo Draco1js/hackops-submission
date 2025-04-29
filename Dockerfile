@@ -43,7 +43,7 @@ FROM node:20-alpine AS server
 WORKDIR /app
 
 # Install express and other dependencies directly
-RUN pnpm install
+RUN npm install
 
 # Copy built files
 COPY --from=base /app/packages/server/dist /app/server
