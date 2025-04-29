@@ -37,6 +37,9 @@ jobs:
             
       - name: Install dependencies
         run: pnpm install
+      
+      - name: Install Playwright
+        run: pnpm exec playwright install
         
       - name: Build shared package
         run: pnpm --filter shared build
