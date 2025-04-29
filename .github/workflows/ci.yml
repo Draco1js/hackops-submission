@@ -134,6 +134,7 @@ jobs:
             echo '      - "3001:3001"' >> docker-compose.yml
             echo '    environment:' >> docker-compose.yml
             echo '      - NODE_ENV=production' >> docker-compose.yml
+            echo '    command: node /app/server/index.js' >> docker-compose.yml
             
             # Pull latest images and restart containers
             docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/client:latest
