@@ -135,9 +135,12 @@ jobs:
             echo '      - "3000:3000"' >> docker-compose.yml
             echo '    environment:' >> docker-compose.yml
             echo '      - NODE_ENV=production' >> docker-compose.yml
+            echo '      - SERVER_URL=http://server:3001' >> docker-compose.yml
             echo '    depends_on:' >> docker-compose.yml
             echo '      - server' >> docker-compose.yml
             echo '    restart: unless-stopped' >> docker-compose.yml
+            echo '    networks:' >> docker-compose.yml
+            echo '      - app-network' >> docker-compose.yml
             echo '' >> docker-compose.yml
             echo '  server:' >> docker-compose.yml
             echo '    image: ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:latest' >> docker-compose.yml
@@ -147,6 +150,12 @@ jobs:
             echo '      - NODE_ENV=production' >> docker-compose.yml
             echo '    command: node /app/server/index.js' >> docker-compose.yml
             echo '    restart: unless-stopped' >> docker-compose.yml
+            echo '    networks:' >> docker-compose.yml
+            echo '      - app-network' >> docker-compose.yml
+            echo '' >> docker-compose.yml
+            echo 'networks:' >> docker-compose.yml
+            echo '  app-network:' >> docker-compose.yml
+            echo '    driver: bridge' >> docker-compose.yml
 
             # Pull latest images and restart containers
             docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/client:latest
@@ -154,9 +163,13 @@ jobs:
             docker-compose down
             docker-compose up -d
 
+            # Install net-tools for netstat
+            sudo apt-get update
+            sudo apt-get install -y net-tools
+
             # Wait for containers to be fully up before configuring Nginx
             echo "Waiting for containers to start..."
-            sleep 15
+            sleep 30
 
             # Verify server is running and listening on port 3001
             echo "Checking if server is running..."
