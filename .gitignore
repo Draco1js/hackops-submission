@@ -27,3 +27,5 @@ playwright-report
 playwright-report/index.html
 test-results
 vps.key
+
+tsconfig.tsbuildinfo

@@ -26,12 +26,9 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=production
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     deploy:
       resources:
         limits:
           memory: 512M
-    command: >
-      sh -c "mkdir -p /app/server/server/src && 
-             ln -s /app/server/tracing.js /app/server/server/src/tracing.js || true && 
-             node /app/server/index.js"
     restart: unless-stopped
