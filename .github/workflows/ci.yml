@@ -114,7 +114,7 @@ jobs:
             
             # Copy docker-compose file if it doesn't exist
             if [ ! -f docker-compose.yml ]; then
-              cat > docker-compose.yml << 'EOL'
+              cat > docker-compose.yml << 'EOFMARKER'
               version: '3.8'
               
               services:
@@ -133,7 +133,7 @@ jobs:
                     - "3001:3001"
                   environment:
                     - NODE_ENV=production
-              EOL
+              EOFMARKER
             fi
             
             # Pull latest images and restart containers
