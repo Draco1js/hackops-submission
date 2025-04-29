@@ -108,8 +108,36 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /path/to/your/app
+            # Create app directory if it doesn't exist
+            mkdir -p ~/hackops-submission
+            cd ~/hackops-submission
+            
+            # Copy docker-compose file if it doesn't exist
+            if [ ! -f docker-compose.yml ]; then
+              cat > docker-compose.yml << 'EOL'
+              version: '3.8'
+              
+              services:
+                client:
+                  image: ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/client:latest
+                  ports:
+                    - "3000:3000"
+                  environment:
+                    - NODE_ENV=production
+                  depends_on:
+                    - server
+              
+                server:
+                  image: ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:latest
+                  ports:
+                    - "3001:3001"
+                  environment:
+                    - NODE_ENV=production
+              EOL
+            fi
+            
+            # Pull latest images and restart containers
+            docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/client:latest
+            docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:latest
             docker-compose down
-            docker pull ghcr.io/${{ github.repository }}/client:latest
-            docker pull ghcr.io/${{ github.repository }}/server:latest
             docker-compose up -d
