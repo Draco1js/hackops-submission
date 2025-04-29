@@ -43,7 +43,7 @@ FROM node:20-alpine AS server
 WORKDIR /app
 
 # Install express and other dependencies directly
-RUN npm install
+RUN npm install express cors morgan socket.io @opentelemetry/api axios
 
 # Copy built files
 COPY --from=base /app/packages/server/dist /app/server
