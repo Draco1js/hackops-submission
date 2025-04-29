@@ -7,9 +7,9 @@ import fs from 'fs';
 
 const API_URL = 'http://localhost:3001/api';
 const SOCKET_URL = 'ws://localhost:3001';
-const NUM_USERS = 500; // Reduced from 100
-const OPERATIONS_PER_USER = 30; // Reduced from 20
-const DELAY_BETWEEN_OPS_MS = 100; // Increased from 200
+const NUM_USERS = 600; // Reduced from 100
+const OPERATIONS_PER_USER = 60; // Reduced from 20
+const DELAY_BETWEEN_OPS_MS = 20; // Increased from 200
 const LOG_FILE = 'stress-test-results.log';
 const BATCH_SIZE = 20;
 
@@ -52,7 +52,12 @@ class User {
 
   constructor(id: number) {
     this.id = id;
-    this.socket = io(SOCKET_URL);
+    this.socket = io(SOCKET_URL, {
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
     
     this.socket.on('connect', () => {
       conditionalLog(`User ${this.id} connected with socket ID: ${this.socket.id}`);
@@ -63,13 +68,14 @@ class User {
       console.error(`User ${this.id} socket connection error:`, error.message);
     });
     
-    // Update to handle the new todos format (paginated)
+    // Update to handle the new todos format (paginated or array)
     this.socket.on('todos:update', (todosData: Todo[] | { todos: Todo[] }) => {
       if (Array.isArray(todosData)) {
         this.todos = todosData;
       } else if (todosData && 'todos' in todosData) {
         this.todos = todosData.todos;
       }
+      conditionalLog(`User ${this.id} received ${this.todos.length} todos`);
     });
   }
 

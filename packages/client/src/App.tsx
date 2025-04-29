@@ -10,7 +10,20 @@ function App() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorCount, setErrorCount] = useState(1);
   const [onlineUsers, setOnlineUsers] = useState<number>(1);
+
+  // Function to handle errors with counter
+  const handleError = (errorMessage: string) => {
+    if (error === errorMessage) {
+      // Same error occurred again, increment counter
+      setErrorCount(prev => prev + 1);
+    } else {
+      // New error, reset counter and set new error
+      setError(errorMessage);
+      setErrorCount(1);
+    }
+  };
 
   // Calculate progress
   const totalTodos = todos.length;
@@ -27,8 +40,9 @@ function App() {
         // Check if the response is an object with a todos property
         setTodos(Array.isArray(data) ? data : (data.todos || []));
         setError(null);
+        setErrorCount(1);
       } catch (err) {
-        setError("Failed to fetch todos. Please try again.");
+        handleError("Failed to fetch todos. Please try again.");
         console.error(err);
       } finally {
         setLoading(false);
@@ -41,20 +55,28 @@ function App() {
     socketService.connect();
     
     // Listen for todo updates
-    const unsubscribe = socketService.on('todos:update', (updatedTodos: Todo[]) => {
-      setTodos(updatedTodos);
+    const unsubscribeTodos = socketService.on('todos:update', (updatedTodos: Todo[] | { todos: Todo[] }) => {
+      console.log('Received todos update:', updatedTodos);
+      if (Array.isArray(updatedTodos)) {
+        setTodos(updatedTodos);
+      } else if (updatedTodos && 'todos' in updatedTodos) {
+        setTodos(updatedTodos.todos);
+      }
     });
     
     // Listen for user count updates
-    socketService.on('users:count', (count: number) => {
+    const unsubscribeUsers = socketService.on('users:count', (count: number) => {
+      console.log('Received users count update:', count);
       setOnlineUsers(count);
     });
     
     // Cleanup on unmount
     return () => {
-      unsubscribe();
+      unsubscribeTodos();
+      unsubscribeUsers();
       socketService.disconnect();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -64,7 +86,7 @@ function App() {
         await createTodo(input.trim());
         setInput("");
       } catch (err) {
-        setError("Failed to create todo. Please try again.");
+        handleError("Failed to create todo. Please try again.");
         console.error(err);
       }
     }
@@ -86,7 +108,7 @@ function App() {
       
       await updateTodo(id, { completed: !todoToUpdate.completed });
     } catch (err) {
-      setError("Failed to update todo. Please try again.");
+      handleError("Failed to update todo. Please try again.");
       console.error(err);
     }
   };
@@ -95,7 +117,7 @@ function App() {
     try {
       await deleteTodo(id);
     } catch (err) {
-      setError("Failed to delete todo. Please try again.");
+      handleError("Failed to delete todo. Please try again.");
       console.error(err);
     }
   };
@@ -137,8 +159,13 @@ function App() {
           <h2 className="text-xl font-bold mb-4 text-white">Your Tasks</h2>
           
           {error && (
-            <div className="bg-red-900/50 border border-red-700 text-white p-3 rounded mb-4">
-              {error}
+            <div className="bg-red-900/50 border border-red-700 text-white p-3 rounded mb-4 flex justify-between items-center">
+              <span>{error}</span>
+              {errorCount > 1 && (
+                <span className="bg-red-700 text-white text-xs font-medium px-2 py-1 rounded-full">
+                  {errorCount}
+                </span>
+              )}
             </div>
           )}
           

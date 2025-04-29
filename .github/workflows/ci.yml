@@ -49,6 +49,9 @@ jobs:
           
       - name: Lint
         run: pnpm --filter client lint
+      
+      - name: End-to-end tests
+        run: pnpm e2e
         
       - name: Build
         run: pnpm build

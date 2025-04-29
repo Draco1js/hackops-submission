@@ -67,7 +67,7 @@ io.on('connection', (socket) => {
   io.emit('users:count', onlineUsers);
   
   // Send current todos to newly connected client
-  socket.emit('todos:init', todos);
+  socket.emit('todos:update', todos);
   
   socket.on('disconnect', () => {
     console.info('Client disconnected:', socket.id);
@@ -209,16 +209,11 @@ const broadcastTodos = () => {
   
   // Debounce broadcasts to reduce frequency
   setTimeout(() => {
-    // Only send the first 100 todos to reduce payload size
-    const limitedTodos = todos.slice(0, 100);
+    // Send the full todos list to all clients
+    io.emit('todos:update', todos);
     
-    // Send the todo IDs separately to help clients track what's available
-    const todoIds = todos.map(t => t.id);
-    
-    io.emit('todos:update', limitedTodos);
-    io.emit('todos:ids', todoIds);
     broadcastPending = false;
-  }, 100);
+  }, 50); // Reduced debounce time for faster updates
 };
 
 // Add memory usage monitoring
