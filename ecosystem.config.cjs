@@ -18,3 +18,4 @@ module.exports = {
     }
   ]
 };
+// Not using pm2 anymore lol, just keeping this for reference
