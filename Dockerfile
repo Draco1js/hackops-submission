@@ -19,9 +19,8 @@ RUN pnpm config set network-timeout 300000 && \
     pnpm config set fetch-retries 5 && \
     pnpm config set fetch-retry-mintimeout 20000 && \
     pnpm config set fetch-retry-maxtimeout 120000 && \
-    pnpm install --frozen-lockfile --ignore-scripts
+    pnpm install --force --ignore-scripts
 
-# Install TypeScript globally to ensure tsc is available
 # Copy source code
 COPY . .
 
