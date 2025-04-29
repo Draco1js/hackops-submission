@@ -213,7 +213,36 @@ jobs:
 
 1. Merge code into `main`
 2. GitHub Actions pipeline runs tests, builds images, pushes to registry
-3. SSH into VPS: pulls images, updates `docker-compose.yml`, restarts services
+3. GitHub Actions deploys to VPS:
+   - Pulls latest images
+   - Updates `docker-compose.yml`
+   - Restarts services
+   - Configures Nginx as a reverse proxy
+   - Sets up SSL with Let's Encrypt
+
+### Setting Up GitHub Secrets for Deployment
+
+To enable automatic deployment to your VPS, you need to set up the following GitHub secrets:
+
+1. `VPS_HOST`: Your VPS IP address
+2. `VPS_USERNAME`: The username to connect to your VPS (usually `root`)
+3. `VPS_SSH_KEY`: Your SSH private key for connecting to the VPS
+
+You can use the provided script to set up these secrets:
+
+```bash
+# Make sure you have the GitHub CLI installed
+# https://cli.github.com/
+
+# Run the setup script
+./scripts/setup-github-secrets.sh
+```
+
+### Domain Configuration
+
+The deployment is configured to work with the domain `hackops.dracodev.me`. Make sure your domain's DNS records point to your VPS IP address:
+
+- Create an A record for `hackops.dracodev.me` pointing to your VPS IP address
 
 
 ## Configuration Files
