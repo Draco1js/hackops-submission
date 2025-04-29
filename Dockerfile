@@ -6,7 +6,7 @@ ENV NODE_ENV=development
 ENV HUSKY=0
 
 # Install pnpm
-RUN npm install -g pnpm@8.15.4
+RUN npm install -g pnpm@8.15.4 typescript
 
 # Copy package files first for better caching
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
@@ -22,8 +22,6 @@ RUN pnpm config set network-timeout 300000 && \
     pnpm install --frozen-lockfile --ignore-scripts
 
 # Install TypeScript globally to ensure tsc is available
-RUN npm install -g typescript
-
 # Copy source code
 COPY . .
 
