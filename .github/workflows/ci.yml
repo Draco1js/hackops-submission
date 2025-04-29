@@ -112,29 +112,25 @@ jobs:
             mkdir -p ~/hackops-submission
             cd ~/hackops-submission
             
-            # Copy docker-compose file if it doesn't exist
-            if [ ! -f docker-compose.yml ]; then
-              cat > docker-compose.yml << 'EOFMARKER'
-              version: '3.8'
-              
-              services:
-                client:
-                  image: ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/client:latest
-                  ports:
-                    - "3000:3000"
-                  environment:
-                    - NODE_ENV=production
-                  depends_on:
-                    - server
-              
-                server:
-                  image: ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:latest
-                  ports:
-                    - "3001:3001"
-                  environment:
-                    - NODE_ENV=production
-              EOFMARKER
-            fi
+            # Create docker-compose file
+            echo 'version: "3.8"' > docker-compose.yml
+            echo '' >> docker-compose.yml
+            echo 'services:' >> docker-compose.yml
+            echo '  client:' >> docker-compose.yml
+            echo '    image: ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/client:latest' >> docker-compose.yml
+            echo '    ports:' >> docker-compose.yml
+            echo '      - "3000:3000"' >> docker-compose.yml
+            echo '    environment:' >> docker-compose.yml
+            echo '      - NODE_ENV=production' >> docker-compose.yml
+            echo '    depends_on:' >> docker-compose.yml
+            echo '      - server' >> docker-compose.yml
+            echo '' >> docker-compose.yml
+            echo '  server:' >> docker-compose.yml
+            echo '    image: ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:latest' >> docker-compose.yml
+            echo '    ports:' >> docker-compose.yml
+            echo '      - "3001:3001"' >> docker-compose.yml
+            echo '    environment:' >> docker-compose.yml
+            echo '      - NODE_ENV=production' >> docker-compose.yml
             
             # Pull latest images and restart containers
             docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/client:latest
