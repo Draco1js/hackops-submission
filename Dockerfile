@@ -42,24 +42,13 @@ CMD ["serve", "-s", "/app/client", "-l", "3000"]
 FROM node:20-alpine AS server
 WORKDIR /app
 
-# Copy package files for production dependencies
-COPY --from=base /app/package.json /app/
-COPY --from=base /app/pnpm-lock.yaml /app/
-COPY --from=base /app/pnpm-workspace.yaml /app/
-COPY --from=base /app/packages/server/package.json /app/packages/server/
-COPY --from=base /app/packages/shared/package.json /app/packages/shared/
-
-# Install production dependencies only
-RUN npm install -g pnpm@8.15.4 && \
-    pnpm config set network-timeout 300000 && \
-    pnpm config set fetch-retries 5 && \
-    pnpm config set fetch-retry-mintimeout 20000 && \
-    pnpm config set fetch-retry-maxtimeout 120000 && \
-    pnpm install --prod --frozen-lockfile
+# Install express and other dependencies directly
+RUN pnpm install
 
 # Copy built files
 COPY --from=base /app/packages/server/dist /app/server
-COPY --from=base /app/packages/shared/dist /app/packages/shared/dist
+COPY --from=base /app/packages/shared/dist /app/shared/dist
 
 EXPOSE 3001
+ENV NODE_ENV=production
 CMD ["node", "/app/server/index.js"]
