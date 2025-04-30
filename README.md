@@ -39,7 +39,6 @@ HackOps is a competitive hackathon where teams showcase their DevOps expertise b
 - Runtime orchestration via **Docker Compose** on a VPS
 - Observability with **OpenTelemetry** and structured logging
 
-
 ## Monorepo Structure
 
 ```
@@ -56,6 +55,56 @@ HackOps is a competitive hackathon where teams showcase their DevOps expertise b
 - **PNPM workspaces** ensure efficient installs and consistent deps
 - **Strict TypeScript** settings guarantee type safety across boundaries
 
+````mermaid
+flowchart TD
+    subgraph Development
+        dev[Developer Codes] --> commit[Commit to GitHub]
+        commit --> pr[Create Pull Request]
+    end
+
+    subgraph "CI/CD Pipeline"
+        pr --> validate[GitHub Actions: Validate Job]
+        validate --> tests[Run Tests]
+        tests --> build[Build Application]
+
+        subgraph Testing
+            tests --> lint[ESLint]
+            tests --> typecheck[TypeScript Check]
+            tests --> unittest[Jest Unit Tests]
+            tests --> e2e[Playwright E2E Tests]
+        end
+
+        build --> merge[Merge to Main]
+        merge --> deploy[GitHub Actions: Deploy Job]
+    end
+
+    subgraph Dockerization
+        deploy --> docker_build[Build Docker Images]
+        docker_build --> client_img[Client Image]
+        docker_build --> server_img[Server Image]
+        client_img --> push_registry[Push to GitHub Container Registry]
+        server_img --> push_registry
+    end
+
+    subgraph "VPS Deployment"
+        push_registry --> ssh_vps[SSH into VPS]
+        ssh_vps --> pull_images[Pull Latest Images]
+        pull_images --> compose[Create docker-compose.yml]
+        compose --> restart[Restart Containers]
+        restart --> nginx[Configure Nginx]
+        nginx --> ssl[Set Up SSL with Certbot]
+    end
+
+    classDef dev fill:#d4f1f9,stroke:#05a,stroke-width:2px
+    classDef ci fill:#ffe6cc,stroke:#d79b00,stroke-width:2px
+    classDef docker fill:#d5e8d4,stroke:#82b366,stroke-width:2px
+    classDef vps fill:#e1d5e7,stroke:#9673a6,stroke-width:2px
+
+    class Development dev
+    class "CI/CD Pipeline" ci
+    class Dockerization docker
+    class "VPS Deployment" vps
+```
 
 ## Docker Implementation
 
@@ -98,10 +147,9 @@ COPY packages/server .
 RUN pnpm build
 
 # Runtime images...
-```
+````
 
 </details>
-
 
 ## CI/CD Pipeline (GitHub Actions)
 
@@ -158,14 +206,12 @@ jobs:
 
 </details>
 
-
 ## Testing Strategy
 
 - **Jest** for unit & integration tests (both client & server)
 - **Playwright** for cross-browser end-to-end tests
 - **Stress testing** script to validate performance under load
 - All tests run in CI before deployment
-
 
 ## Container Orchestration
 
@@ -176,14 +222,12 @@ jobs:
 - Resource limits: 512 MB memory for the server
 - Restart policy: `unless-stopped`
 
-
 ## Monitoring and Observability
 
 - **OpenTelemetry** integrated for distributed tracing
 - `/api/health` endpoint for liveness checks
 - **Morgan** middleware for HTTP request logging
 - Stress test hooks to ensure observability under load
-
 
 ## Dependency Management
 
@@ -192,7 +236,6 @@ jobs:
 - Separate schedules for updating npm packages vs. GitHub Actions
 - **Husky** + **lint-staged** to enforce code quality on commits
 
-
 ## Performance Optimizations
 
 - Debounced Socket.IO broadcasts to reduce noise
@@ -200,14 +243,12 @@ jobs:
 - Docker layer caching optimizations in the build
 - **Tailwind CSS v4** with Vite for on-demand styles
 
-
 ## Security Considerations
 
 - **CORS** properly scoped in production
 - Secrets managed via environment variables (no hard-coded creds)
 - Production builds minified & stripped of dev tooling
 - Regular dependency updates via Dependabot
-
 
 ## Deployment Process
 
@@ -244,7 +285,6 @@ The deployment is configured to work with the domain `hackops.dracodev.me`. Make
 
 - Create an A record for `hackops.dracodev.me` pointing to your VPS IP address
 
-
 ## Configuration Files
 
 - `docker-compose.yml`: service definitions & orchestration
@@ -255,7 +295,6 @@ The deployment is configured to work with the domain `hackops.dracodev.me`. Make
 - `.npmrc`: PNPM settings & registry
 - `.gitignore`: excludes logs, `node_modules`, build artifacts
 
-
 ## Environment Variables
 
 - `NODE_ENV` (production/development)
@@ -264,7 +303,6 @@ The deployment is configured to work with the domain `hackops.dracodev.me`. Make
 - `DISABLE_TRACING` (toggle OpenTelemetry)
 - `STRESS_TEST` (enable performance tests)
 
-
 ## Network Configuration
 
 - Client exposed on `3000`
@@ -272,13 +310,11 @@ The deployment is configured to work with the domain `hackops.dracodev.me`. Make
 - Client ↔ Server communication via REST & WebSockets
 - `CORS` patterns: permissive in dev, locked-down in prod
 
-
 ## Resource Management
 
 - Server container capped at **512 MB** RAM
 - Only production deps in final Docker layers
 - Alpine base images for minimal footprint
-
 
 ## Scaling Considerations
 
@@ -287,13 +323,11 @@ The deployment is configured to work with the domain `hackops.dracodev.me`. Make
 - Health checks to auto-recover unhealthy containers
 - Defined resource limits for predictable performance
 
-
 ## Technical Debt & Known Issues
 
 - Tracing module temporarily disabled (commented out)
 - Uses in-memory store—no database persistence
 - No authentication/authorization implemented
-
 
 ## Commands
 
@@ -315,4 +349,3 @@ docker-compose down       # Stop containers
 docker pull [image]       # Pull latest image
 docker logs [container]   # Inspect logs
 ```
-
