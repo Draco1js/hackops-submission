@@ -5,10 +5,8 @@ if (process.env.STRESS_TEST === 'true') {
   process.env.OTEL_LOG_LEVEL = 'error';
 }
 
-// Temporarily skip tracing imports to get the server running
-console.warn('Tracing module disabled temporarily');
-
-// Continue with regular imports
+// Import tracing after setting environment variables
+import './tracing';
 import express, { Express } from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -18,6 +16,7 @@ import { Todo, CreateTodoDto, UpdateTodoDto } from '../../shared/src/index.js';
 
 const app: Express = express();
 const PORT = process.env.PORT || 3001;
+const HOST = '0.0.0.0'; // Listen on all interfaces
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
@@ -252,9 +251,9 @@ setInterval(() => {
 // Only start the server if this file is run directly, not when imported in tests
 if (process.env.NODE_ENV !== 'test') {
   // Start server
-  httpServer.listen(PORT, () => {
-    console.info(`Server running on http://localhost:${PORT}`);
-    console.info(`WebSocket server running on ws://localhost:${PORT}`);
+  httpServer.listen(Number(PORT), HOST, () => {
+    console.info(`Server running on http://${HOST}:${PORT}`);
+    console.info(`WebSocket server running on ws://${HOST}:${PORT}`);
   });
 }
 
