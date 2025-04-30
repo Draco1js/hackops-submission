@@ -7,28 +7,18 @@ services:
       target: client
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=production
     depends_on:
       - server
+    environment:
+      - NODE_ENV=production
 
   server:
     build:
       context: .
       target: server
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
     ports:
       - "3001:3001"
     environment:
       - NODE_ENV=production
       - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    restart: unless-stopped
+      - PORT=3001
