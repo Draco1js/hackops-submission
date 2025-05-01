@@ -18,7 +18,7 @@ This repository includes details on DevOps practices such as:
 - [Flow Diagram](#flow-diagram)
 
 ###### Secret Video
-![Stress Test Demo](https://drive.google.com/file/d/1lWwXpxc-LT96e60We6uqqiQ7sOGcRvTK/view)
+![Stress Test Demo](/media//stress-test.mp4)
 
 
 ## Monorepo

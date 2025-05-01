@@ -7,9 +7,9 @@ import fs from 'fs';
 
 const API_URL = 'http://localhost:3001/api';
 const SOCKET_URL = 'ws://localhost:3001';
-const NUM_USERS = 600; // Reduced from 100
-const OPERATIONS_PER_USER = 60; // Reduced from 20
-const DELAY_BETWEEN_OPS_MS = 20; // Increased from 200
+const NUM_USERS = 300;
+const OPERATIONS_PER_USER = 20;
+const DELAY_BETWEEN_OPS_MS = 20;
 const LOG_FILE = 'stress-test-results.log';
 const BATCH_SIZE = 20;
 
