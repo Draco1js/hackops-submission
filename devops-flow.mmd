@@ -1,48 +1,51 @@
+
 flowchart TD
-    subgraph Development
-        dev[Developer Codes] --> commit[Commit to GitHub]
-        commit --> pr[Create Pull Request]
+  subgraph Development
+    dev[Developer Codes] --> husky[Husky Pre-commit Checks]
+    husky --> commit[Commit to GitHub]
+    commit --> pr[Create Pull Request]
+  end
+
+  subgraph "CI/CD Pipeline"
+    pr --> validate[GitHub Actions: Validate Job]
+    validate --> tests[Run Tests]
+    tests --> build[Build Application]
+
+    subgraph Testing
+      tests --> lint[ESLint]
+      tests --> typecheck[TypeScript Check]
+      tests --> unittest[Jest Unit Tests]
+      tests --> e2e[Playwright E2E Tests]
     end
 
-    subgraph "CI/CD Pipeline"
-        pr --> validate[GitHub Actions: Validate Job]
-        validate --> tests[Run Tests]
-        tests --> build[Build Application]
-        
-        subgraph Testing
-            tests --> lint[ESLint]
-            tests --> typecheck[TypeScript Check]
-            tests --> unittest[Jest Unit Tests]
-            tests --> e2e[Playwright E2E Tests]
-        end
-        
-        build --> merge[Merge to Main]
-        merge --> deploy[GitHub Actions: Deploy Job]
-    end
-    
-    subgraph Dockerization
-        deploy --> docker_build[Build Docker Images]
-        docker_build --> client_img[Client Image]
-        docker_build --> server_img[Server Image]
-        client_img --> push_registry[Push to GitHub Container Registry]
-        server_img --> push_registry
-    end
-    
-    subgraph "VPS Deployment"
-        push_registry --> ssh_vps[SSH into VPS]
-        ssh_vps --> pull_images[Pull Latest Images]
-        pull_images --> compose[Create docker-compose.yml]
-        compose --> restart[Restart Containers]
-        restart --> nginx[Configure Nginx]
-        nginx --> ssl[Set Up SSL with Certbot]
-    end
-    
-    classDef dev fill:#d4f1f9,stroke:#05a,stroke-width:2px
-    classDef ci fill:#ffe6cc,stroke:#d79b00,stroke-width:2px
-    classDef docker fill:#d5e8d4,stroke:#82b366,stroke-width:2px
-    classDef vps fill:#e1d5e7,stroke:#9673a6,stroke-width:2px
-    
-    class Development dev
-    class "CI/CD Pipeline" ci
-    class Dockerization docker
-    class "VPS Deployment" vps
+    build --> merge[Merge to Main]
+    merge --> deploy[GitHub Actions: Deploy Job]
+  end
+
+  subgraph Dockerization
+    deploy --> docker_build[Build Docker Images]
+    docker_build --> client_img[Client Image]
+    docker_build --> server_img[Server Image]
+    client_img --> push_registry[Push to GitHub Container Registry]
+    server_img --> push_registry
+  end
+
+  subgraph "VPS Deployment"
+    push_registry --> ssh_vps[SSH into VPS]
+    ssh_vps --> pull_images[Pull Latest Images]
+    pull_images --> compose[Create docker-compose.yml]
+    compose --> restart[Restart Containers]
+    restart --> nginx[Automatically Configure Nginx]
+    nginx --> ssl[Set Up SSL with Certbot]
+    ssl --> restart2[Restart Nginx]
+  end
+
+  classDef dev fill:#d4f1f9,stroke:#05a,stroke-width:2px
+  classDef ci fill:#ffe6cc,stroke:#d79b00,stroke-width:2px
+  classDef docker fill:#d5e8d4,stroke:#82b366,stroke-width:2px
+  classDef vps fill:#e1d5e7,stroke:#9673a6,stroke-width:2px
+
+  class Development dev
+  class CI/CD_Pipeline ci
+  class Dockerization docker
+  class VPS_Deployment vps

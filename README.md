@@ -4,10 +4,11 @@ This repository serves as a submission for the HackOps 2025 DevOps competition, 
 
 This repository includes details on DevOps practices such as:
 
-- [A monorepo](#monorepo)
+- [Monorepo Structure](#monorepo)
 - [CI/CD Pipeline](#cicd-pipeline-github-actions)
 - [Testing Strategy](#testing-strategy)
 - [Containerization](#container-orchestration)
+- [Dependency Management](#dependency-management)
 - [Performance Optimizations](#performance-optimizations)
 - [Security Considerations](#security-considerations)
 - [Resource Management](#resource-management)
@@ -28,7 +29,7 @@ This repository implements a monorepo structure using pnpm workspaces, it lets u
 │  └─ shared/                  # TypeScript types and interfaces
 ├─ pnpm-workspace.yaml         # PNPM workspace config
 ├─ docker-compose.yml          # Docker Compose config
-├─ Dockerfile                   # Docker build config
+├─ Dockerfile                  # Docker build config
 ├─ pnpm-lock.yaml              # PNPM lockfile
 └─ package.json                # Root scripts and workspace config
 ```
@@ -119,9 +120,9 @@ pnpm build                       # Build all workspaces
 pnpm test                        # Run Jest unit tests
 pnpm e2e                         # Run Playwright E2E tests
 pnpm typecheck                   # Type check all workspaces
-pnpm --filter server dev          # Start server in watch mode
-pnpm --filter client dev          # Start client in watch mode
-pnpm --filter server stress-test  # Start stress testing script
+pnpm --filter server dev         # Start server in watch mode
+pnpm --filter client dev         # Start client in watch mode
+pnpm --filter server stress-test # Start stress testing script
 ```
 
 ## Flow Diagram
