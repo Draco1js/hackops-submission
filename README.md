@@ -17,9 +17,6 @@ This repository includes details on DevOps practices such as:
 - [Commands](#commands)
 - [Flow Diagram](#flow-diagram)
 
-###### Secret Video
-![Stress Test Demo](/media//stress-test.mp4)
-
 
 ## Monorepo
 
@@ -87,6 +84,9 @@ Triggered on pushes to main and on pull requests:
 - Pagination on API/Websockets to reduce payload size
 - Tailwind CSS v4 with Vite for on-demand styles
 - Locking/Transaction mechanism to prevent race conditions
+
+https://github.com/user-attachments/assets/69733eaa-b28d-40a9-9ff7-6667c3ba88bd
+
 
 ## Security Considerations
 
