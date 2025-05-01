@@ -8,7 +8,13 @@ This repository includes details on DevOps practices such as:
 - [CI/CD Pipeline](#cicd-pipeline-github-actions)
 - [Testing Strategy](#testing-strategy)
 - [Containerization](#container-orchestration)
--
+- [Performance Optimizations](#performance-optimizations)
+- [Security Considerations](#security-considerations)
+- [Resource Management](#resource-management)
+- [Scaling Considerations](#scaling-considerations)
+- [Technical Debt & Known Issues](#technical-debt--known-issues)
+- [Commands](#commands)
+- [Flow Diagram](#flow-diagram)
 
 ## Monorepo
 
@@ -157,8 +163,9 @@ flowchart TD
     ssh_vps --> pull_images[Pull Latest Images]
     pull_images --> compose[Create docker-compose.yml]
     compose --> restart[Restart Containers]
-    restart --> nginx[Configure Nginx]
+    restart --> nginx[Automatically Configure Nginx]
     nginx --> ssl[Set Up SSL with Certbot]
+    ssl --> restart2[Restart Nginx]
   end
 
   classDef dev fill:#d4f1f9,stroke:#05a,stroke-width:2px
@@ -171,5 +178,3 @@ flowchart TD
   class Dockerization docker
   class VPS_Deployment vps
 ```
-
-````
