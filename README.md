@@ -17,6 +17,10 @@ This repository includes details on DevOps practices such as:
 - [Commands](#commands)
 - [Flow Diagram](#flow-diagram)
 
+###### Secret Video
+![Stress Test Demo](https://6wr7xxkh2e.ufs.sh/f/RJiIbUwuAUdpR7URmZwuAUdp3h0qv9oweiSnHKf2rB8XaszT)
+
+
 ## Monorepo
 
 This repository implements a monorepo structure using pnpm workspaces, it lets us manage the server and client from the same repo, as well as manage all the deployments for each services from the same place. It also includes a shared package that can be used by all other packages for consistency purposes. The structure is as follows:
