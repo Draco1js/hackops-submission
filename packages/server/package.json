@@ -19,7 +19,7 @@
     "@opentelemetry/instrumentation-express": "^0.35.0",
     "@opentelemetry/instrumentation-http": "^0.46.0",
     "@opentelemetry/resources": "^1.19.0",
-    "@opentelemetry/sdk-node": "^0.46.0",
+    "@opentelemetry/sdk-node": "^0.200.0",
     "@opentelemetry/sdk-trace-base": "^2.0.0",
     "@opentelemetry/sdk-trace-node": "^1.19.0",
     "@opentelemetry/semantic-conventions": "^1.19.0",
