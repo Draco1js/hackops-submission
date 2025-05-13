@@ -18,7 +18,7 @@ jobs:
           node-version: '20'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 8
 
@@ -114,15 +114,6 @@ jobs:
           tags: ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:latest
           target: server
 
-      - name: Copy Nginx config to VPS
-        uses: appleboy/scp-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: "nginx/hackops.dracodev.me.conf"
-          target: "/tmp"
-
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
         with:
@@ -144,9 +135,12 @@ jobs:
             echo '      - "3000:3000"' >> docker-compose.yml
             echo '    environment:' >> docker-compose.yml
             echo '      - NODE_ENV=production' >> docker-compose.yml
+            echo '      - VITE_SERVER_URL=https://hackops.dracodev.me' >> docker-compose.yml
             echo '    depends_on:' >> docker-compose.yml
             echo '      - server' >> docker-compose.yml
             echo '    restart: unless-stopped' >> docker-compose.yml
+            echo '    networks:' >> docker-compose.yml
+            echo '      - app-network' >> docker-compose.yml
             echo '' >> docker-compose.yml
             echo '  server:' >> docker-compose.yml
             echo '    image: ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:latest' >> docker-compose.yml
@@ -154,46 +148,112 @@ jobs:
             echo '      - "3001:3001"' >> docker-compose.yml
             echo '    environment:' >> docker-compose.yml
             echo '      - NODE_ENV=production' >> docker-compose.yml
+            echo '      - CORS_ORIGIN=https://hackops.dracodev.me' >> docker-compose.yml
             echo '    command: node /app/server/index.js' >> docker-compose.yml
             echo '    restart: unless-stopped' >> docker-compose.yml
+            echo '    networks:' >> docker-compose.yml
+            echo '      - app-network' >> docker-compose.yml
+            echo '' >> docker-compose.yml
+            echo 'networks:' >> docker-compose.yml
+            echo '  app-network:' >> docker-compose.yml
+            echo '    driver: bridge' >> docker-compose.yml
 
-            # Pull latest images and restart containers
-            docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/client:latest
-            docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:latest
-            docker-compose down
-            docker-compose up -d
-
-            # Set up Nginx
-            # Install Nginx if not already installed
-            if ! command -v nginx &> /dev/null; then
-              apt-get update
-              apt-get install -y nginx
-            fi
-
-            # Copy Nginx configuration
-            cp /tmp/nginx/hackops.dracodev.me.conf /etc/nginx/sites-available/hackops.dracodev.me
-
-            # Create symbolic link if it doesn't exist
-            if [ ! -f /etc/nginx/sites-enabled/hackops.dracodev.me ]; then
-              ln -s /etc/nginx/sites-available/hackops.dracodev.me /etc/nginx/sites-enabled/
-            fi
-
-            # Remove default site if it exists
-            if [ -f /etc/nginx/sites-enabled/default ]; then
-              rm /etc/nginx/sites-enabled/default
-            fi
-
-            # Test Nginx configuration
-            nginx -t
-
-            # Reload Nginx
-            systemctl reload nginx
-
-            # Install Certbot for SSL if not already installed
-            if ! command -v certbot &> /dev/null; then
-              apt-get update
-              apt-get install -y certbot python3-certbot-nginx
-            fi
-
-            # Set up SSL certificate
-            certbot --nginx -d hackops.dracodev.me --non-interactive --agree-tos --email admin@dracodev.me
+            echo ' # Create a dummy tracing module for the server' >> docker-compose.yml
+            echo ' mkdir -p tracing' >> docker-compose.yml
+            echo ' echo 'export default {};' > tracing/index.js' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' # Create a Dockerfile for the server fix' >> docker-compose.yml
+            echo ' cat > Dockerfile.server-fix << 'DOCKERFILE'' >> docker-compose.yml
+            echo ' FROM ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:latest' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' # Copy the dummy tracing module' >> docker-compose.yml
+            echo ' COPY tracing /app/server/tracing' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' # Set the command' >> docker-compose.yml
+            echo ' CMD ["node", "/app/server/index.js"]' >> docker-compose.yml
+            echo ' DOCKERFILE' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' # Pull latest images' >> docker-compose.yml
+            echo ' docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/client:latest' >> docker-compose.yml
+            echo ' docker pull ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:latest' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' # Build the fixed server image' >> docker-compose.yml
+            echo ' docker build -t ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:fixed -f Dockerfile.server-fix .' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' # Update docker-compose.yml to use the fixed image' >> docker-compose.yml
+            echo ' sed -i 's|ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:latest|ghcr.io/${{ steps.lowercase.outputs.owner }}/${{ steps.lowercase.outputs.repo }}/server:fixed|g' docker-compose.yml' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' # Restart containers' >> docker-compose.yml
+            echo ' docker-compose down' >> docker-compose.yml
+            echo ' docker-compose up -d' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' # Get container IPs for Nginx configuration' >> docker-compose.yml
+            echo ' CLIENT_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' hackops-submission_client_1)' >> docker-compose.yml
+            echo ' SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' hackops-submission_server_1)' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' # Create Nginx configuration' >> docker-compose.yml
+            echo ' cat > /etc/nginx/sites-available/hackops.dracodev.me << NGINX_CONF' >> docker-compose.yml
+            echo ' server {' >> docker-compose.yml
+            echo '     server_name hackops.dracodev.me;' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo '     location / {' >> docker-compose.yml
+            echo '         proxy_pass http://$CLIENT_IP:3000;' >> docker-compose.yml
+            echo '         proxy_http_version 1.1;' >> docker-compose.yml
+            echo '         proxy_set_header Upgrade \$http_upgrade;' >> docker-compose.yml
+            echo '         proxy_set_header Connection 'upgrade';' >> docker-compose.yml
+            echo '         proxy_set_header Host \$host;' >> docker-compose.yml
+            echo '         proxy_cache_bypass \$http_upgrade;' >> docker-compose.yml
+            echo '     }' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo '     location /api/ {' >> docker-compose.yml
+            echo '         proxy_pass http://$SERVER_IP:3001/api/;' >> docker-compose.yml
+            echo '         proxy_http_version 1.1;' >> docker-compose.yml
+            echo '         proxy_set_header Upgrade \$http_upgrade;' >> docker-compose.yml
+            echo '         proxy_set_header Connection 'upgrade';' >> docker-compose.yml
+            echo '         proxy_set_header Host \$host;' >> docker-compose.yml
+            echo '         proxy_set_header X-Real-IP \$remote_addr;' >> docker-compose.yml
+            echo '         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' >> docker-compose.yml
+            echo '         proxy_set_header X-Forwarded-Proto \$scheme;' >> docker-compose.yml
+            echo '         proxy_cache_bypass \$http_upgrade;' >> docker-compose.yml
+            echo '     }' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo '     location /socket.io/ {' >> docker-compose.yml
+            echo '         proxy_pass http://$SERVER_IP:3001/socket.io/;' >> docker-compose.yml
+            echo '         proxy_http_version 1.1;' >> docker-compose.yml
+            echo '         proxy_set_header Upgrade \$http_upgrade;' >> docker-compose.yml
+            echo '         proxy_set_header Connection "upgrade";' >> docker-compose.yml
+            echo '         proxy_set_header Host \$host;' >> docker-compose.yml
+            echo '         proxy_set_header X-Real-IP \$remote_addr;' >> docker-compose.yml
+            echo '         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;' >> docker-compose.yml
+            echo '         proxy_set_header X-Forwarded-Proto \$scheme;' >> docker-compose.yml
+            echo '         proxy_cache_bypass \$http_upgrade;' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo '         # WebSocket specific settings' >> docker-compose.yml
+            echo '         proxy_buffering off;' >> docker-compose.yml
+            echo '         proxy_read_timeout 86400;' >> docker-compose.yml
+            echo '         proxy_send_timeout 86400;' >> docker-compose.yml
+            echo '     }' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo '     listen 443 ssl; # managed by Certbot' >> docker-compose.yml
+            echo '     ssl_certificate /etc/letsencrypt/live/hackops.dracodev.me/fullchain.pem; # managed by Certbot' >> docker-compose.yml
+            echo '     ssl_certificate_key /etc/letsencrypt/live/hackops.dracodev.me/privkey.pem; # managed by Certbot' >> docker-compose.yml
+            echo '     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot' >> docker-compose.yml
+            echo '     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot' >> docker-compose.yml
+            echo ' }' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' server {' >> docker-compose.yml
+            echo '     if (\$host = hackops.dracodev.me) {' >> docker-compose.yml
+            echo '         return 301 https://\$host\$request_uri;' >> docker-compose.yml
+            echo '     } # managed by Certbot' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo '     listen 80;' >> docker-compose.yml
+            echo '     server_name hackops.dracodev.me;' >> docker-compose.yml
+            echo '     return 404; # managed by Certbot' >> docker-compose.yml
+            echo ' }' >> docker-compose.yml
+            echo ' NGINX_CONF' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' # Test Nginx configuration' >> docker-compose.yml
+            echo ' nginx -t' >> docker-compose.yml
+            echo ' ' >> docker-compose.yml
+            echo ' # Reload Nginx' >> docker-compose.yml
+            echo ' systemctl reload nginx' >> docker-compose.yml

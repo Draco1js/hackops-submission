@@ -1,64 +1,69 @@
 import { io, Socket } from 'socket.io-client';
 
-// Get the server URL from environment or use default
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001';
-
 class SocketService {
   private socket: Socket | null = null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private eventHandlers: Record<string, Array<(...args: any[]) => void>> = {};
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
 
-  connect(): void {
+  connect() {
     if (this.socket) return;
+
+    // Use relative URL instead of hardcoded localhost
+    const socketUrl = '/';
     
-    this.socket = io(SERVER_URL);
-    
-    this.socket.on('connect', () => {
-      console.log('Socket connected:', this.socket?.id);
+    this.socket = io(socketUrl, {
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: this.maxReconnectAttempts,
+      reconnectionDelay: 1000,
+      timeout: 10000
     });
-    
+
+    this.socket.on('connect', () => {
+      console.log('Socket connected');
+      this.reconnectAttempts = 0;
+    });
+
     this.socket.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
+      this.reconnectAttempts++;
+      
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        console.error('Max reconnection attempts reached, giving up');
+        this.socket?.disconnect();
+      }
     });
-    
-    // Re-register any existing event handlers after reconnection
-    Object.entries(this.eventHandlers).forEach(([event, handlers]) => {
-      handlers.forEach(handler => {
-        this.socket?.on(event, handler);
-      });
+
+    this.socket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', reason);
     });
   }
 
-  disconnect(): void {
-    if (!this.socket) return;
-    
-    this.socket.disconnect();
-    this.socket = null;
-    console.log('Socket disconnected');
+  disconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  on(event: string, callback: (...args: any[]) => void): () => void {
-    if (!this.eventHandlers[event]) {
-      this.eventHandlers[event] = [];
-    }
-    
-    this.eventHandlers[event].push(callback);
+  on(event: string, callback: (...args: any[]) => void) {
+    if (!this.socket) this.connect();
     this.socket?.on(event, callback);
     
     return () => {
-      this.eventHandlers[event] = this.eventHandlers[event].filter(cb => cb !== callback);
       this.socket?.off(event, callback);
     };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  emit(event: string, ...args: any[]): void {
-    this.socket?.emit(event, ...args);
+  emit(event: string, data: any) {
+    if (!this.socket) this.connect();
+    this.socket?.emit(event, data);
   }
 
+  // Utility method to check if a todo ID is valid
   isTodoValid(id: string): boolean {
-    return id !== undefined && typeof id === 'string' && id.length > 0;
+    return typeof id === 'string' && id.length > 0;
   }
 }
 
